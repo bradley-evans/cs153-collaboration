@@ -178,3 +178,10 @@ TSWLatexianTemp*
 
 # KBibTeX
 *~[0-9]*
+
+
+# Vagrant
+.vagrant
+*.sublime-project
+*.sublime-workspace
+*.log
