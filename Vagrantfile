@@ -12,6 +12,8 @@ ENV['VAGRANT_DEFAULT_PROVIDER'] = "virtualbox"
 
 Vagrant.configure("2") do |config|
 
+  config.ssh.forward_x11 = true
+
   config.vm.define("ubuntu-xenial") do |ubuntu_config|
 
     ubuntu_config.vm.box = "ubuntu/xenial64"

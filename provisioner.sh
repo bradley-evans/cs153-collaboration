@@ -6,14 +6,13 @@ set -x
 
 ## From LAB1 Intro Steps
 apt-get update
-apt-get install -y build-essential gdb git gcc-multilib upstart
+apt-get install -y build-essential gdb git gcc-multilib upstart sed
 
 git clone http://web.mit.edu/ccutler/www/qemu.git -b 6.828-2.3.0 ~/qemu
 apt-get install -y libsdl1.2-dev libtool-bin libglib2.0-dev libz-dev libpixman-1-dev
 
 # Install QEMU
 mkdir /cs153
-apt-get install -y libsdl1.2-dev libtool-bin libglib2.0-dev libz-dev libpixman-1-dev
 cd ~/qemu
 ./configure --disable-kvm --target-list="i386-softmmu x86_64-softmmu"
 make
@@ -22,9 +21,22 @@ make install
 # Stand up Xv6
 git clone https://github.com/mit-pdos/xv6-public.git ~/xv6
 cd ~/xv6
-# Change makefile to use 1 CPU on line 214 in xv6
+# Change makefile to use 1 CPU on line 214 in xv6. I'm told this "makes things easier."
 sed 's/CPUS := 2/CPUS := 1/' Makefile > Makefile2
 mv Makefile Makefile.bkup
 mv Makefile2 Makefile
 make
 echo "add-auto-load-safe-path $HOME/xv6/.gdbinit" > ~/.gdbinit
+
+# TODO: finish X11 breakfix
+# looks like most of this has to do with Cygwin peculiarities.
+### ENABLE X11 ###
+apt-get install xterm xinit
+
+
+# LAB 0.5 SAVE POINT
+cp -avf /os_share/syscall.c ~/xv6/
+cp -avf /os_share/syscall.h ~/xv6/
+cp -avf /os_share/sysproc.c ~/xv6/
+cp -avf /os_share/usys.S ~/xv6/
+cp -avf /os_share/user.h ~/xv6/
