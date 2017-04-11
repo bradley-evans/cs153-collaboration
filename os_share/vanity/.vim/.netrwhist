@@ -1,0 +1,9 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =7
+let g:netrw_dirhist_1='/usr/share/vim/vim74/bundle/vim-airline/autoload/airline'
+let g:netrw_dirhist_2='/home/squel/.local'
+let g:netrw_dirhist_3='/home/squel/.vim'
+let g:netrw_dirhist_4='/home/squel/.local'
+let g:netrw_dirhist_5='/home/squel/.vim'
+let g:netrw_dirhist_6='/home/squel/.vim/bundle/vim-airline'
+let g:netrw_dirhist_7='/cygdrive/c/vagrant/centos7/.vagrant'

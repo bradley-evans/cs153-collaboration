@@ -93,6 +93,6 @@ sys_uptime(void)
 int
 sys_myhello(void)
 {
-	cprintf("im in ur box");
+	myhello();
 	return 0;   
 }

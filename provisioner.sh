@@ -33,10 +33,10 @@ echo "add-auto-load-safe-path $HOME/xv6/.gdbinit" > ~/.gdbinit
 ### ENABLE X11 ###
 apt-get install xterm xinit
 
+# VANITY STUFF
+mkdir ~/.vim
+cp -r /os_share/vanity/* ~
+cp -r /os_share/vanity/.vim/* ~/.vim/
 
 # LAB 0.5 SAVE POINT
-cp -avf /os_share/syscall.c ~/xv6/
-cp -avf /os_share/syscall.h ~/xv6/
-cp -avf /os_share/sysproc.c ~/xv6/
-cp -avf /os_share/usys.S ~/xv6/
-cp -avf /os_share/user.h ~/xv6/
+cp -avf /os_share/lab0/* ~/xv6/
