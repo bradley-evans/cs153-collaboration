@@ -31,12 +31,16 @@ echo "add-auto-load-safe-path $HOME/xv6/.gdbinit" > ~/.gdbinit
 # TODO: finish X11 breakfix
 # looks like most of this has to do with Cygwin peculiarities.
 ### ENABLE X11 ###
-apt-get install xterm xinit
+apt-get install -y xterm xinit
 
 # VANITY STUFF
+# Custom configurations for Vim.
 mkdir ~/.vim
 cp -r /os_share/vanity/* ~
 cp -r /os_share/vanity/.vim/* ~/.vim/
 
 # LAB 0.5 SAVE POINT
 cp -avf /os_share/lab0/* ~/xv6/
+
+# LAB 1 SAVE POINT
+cp -r /os_share/lab1/xv6/* ~/xv6/

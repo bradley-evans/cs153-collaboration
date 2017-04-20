@@ -1,9 +1,17 @@
 Files I Edited
 
-cp ~/xv6/syscall.c /os_share/lab0/ 
-cp ~/xv6/syscall.h /os_share/lab0/
-cp ~/xv6/sysproc.c /os_share/lab0/
-cp ~/xv6/usys.S /os_share/lab0/
-cp ~/xv6/user.h /os_share/lab0/
+cp ~/xv6/syscall.c /os_share/lab0/ &&
+cp ~/xv6/syscall.h /os_share/lab0/ &&
+cp ~/xv6/sysproc.c /os_share/lab0/ &&
+cp ~/xv6/usys.S /os_share/lab0/ &&
+cp ~/xv6/user.h /os_share/lab0/ &&
+cp ~/xv6/proc.c /os_share/lab0/ && 
+cp ~/xv6/proc.h /os_share/lab0/ &&
+cp ~/xv6/defs.h /os_share/lab0/ &&
+cp ~/xv6/myhello.c /os_share/lab0/
 
-put a thing in proc.c
+
+
+Lab 1 Edits
+
+a lot of stuff
