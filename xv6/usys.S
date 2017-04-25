@@ -29,4 +29,4 @@ SYSCALL(getpid)
 SYSCALL(sbrk)
 SYSCALL(sleep)
 SYSCALL(uptime)
-SYSCALL(myhello)
+SYSCALL(hello)		// MOD - 4/11 : WEEK 2 EXERCISE

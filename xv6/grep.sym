@@ -1,6 +1,6 @@
 00000000 .text
-00000a10 .rodata
-00000a60 .eh_frame
+00000a08 .rodata
+00000a58 .eh_frame
 00000da0 .bss
 00000000 .comment
 00000000 .debug_aranges
@@ -10,14 +10,14 @@
 00000000 .debug_str
 00000000 .debug_loc
 00000000 .debug_ranges
-00000000 umalloc.c
-00000da0 freep
-00000da4 base
 00000000 grep.c
 00000000 ulib.c
 00000000 printf.c
 00000600 printint
-00000a4d digits.1032
+00000a45 digits.1032
+00000000 umalloc.c
+00000da0 freep
+00000da4 base
 00000000 
 00000330 strcpy
 000006a0 printf
@@ -26,6 +26,7 @@
 0000059a mknod
 00000440 gets
 000005d2 getpid
+000005f2 hello
 00000220 grep
 00000920 malloc
 000005e2 sleep
@@ -41,7 +42,7 @@
 0000054a fork
 000005da sbrk
 000005ea uptime
-00000da0 __bss_start
+00000d98 __bss_start
 000003e0 memset
 00000000 main
 000000e0 matchstar
@@ -49,7 +50,7 @@
 000005ca dup
 00000dc0 buf
 000004a0 stat
-00000da0 _edata
+00000d98 _edata
 000011c0 _end
 000001d0 match
 000005b2 link

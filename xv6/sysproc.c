@@ -14,16 +14,25 @@ sys_fork(void)
 }
 
 int
-sys_exit(int status) // LAB1 modification
+sys_exit(void)
 {
-  exit(status);
+  int status;
+
+  if (!argint(0, &status) < 0) {
+    return -1;
+  } else exit(status);
+  
   return 0;  // not reached
 }
 
 int
-sys_wait(void)
+sys_wait(int)
 {
-  return wait();
+
+
+
+
+  return wait(0);
 }
 
 int
@@ -90,9 +99,8 @@ sys_uptime(void)
   return xticks;
 }
 
-int
-sys_myhello(void)
-{
-	myhello();
-	return 0;   
+// MOD - 4/11 : WEEK 2 EXERCISE
+int sys_hello(void) {
+  hello();
+  return 0;
 }

@@ -182,13 +182,18 @@ fork(void)
 
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
-// until its parent calls wait() to find out it exited.
-void exit(int status)
+// until its parent calls wait(0) to find out it exited.
+
+// MOD - 4/18 : Returns a status.
+
+void
+exit(int status)
 {
   struct proc *p;
   int fd;
-
-	proc->exit_status = status;		// LAB1 modification
+  
+  proc->status = status; // MOD - 4/18
+  cprintf("exit status %d", proc->status);
 
   if(proc == initproc)
     panic("init exiting");
@@ -208,7 +213,7 @@ void exit(int status)
 
   acquire(&ptable.lock);
 
-  // Parent might be sleeping in wait().
+  // Parent might be sleeping in wait(0).
   wakeup1(proc->parent);
 
   // Pass abandoned children to init.
@@ -229,7 +234,7 @@ void exit(int status)
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
-wait(void)
+wait(int *status)
 {
   struct proc *p;
   int havekids, pid;
@@ -457,7 +462,7 @@ procdump(void)
 {
   static char *states[] = {
   [UNUSED]    "unused",
-  [EMBRYO]    "embryo",
+   [EMBRYO]    "embryo",
   [SLEEPING]  "sleep ",
   [RUNNABLE]  "runble",
   [RUNNING]   "run   ",
@@ -485,7 +490,6 @@ procdump(void)
   }
 }
 
-void myhello(void) {
-	cprintf("Hello from the other side...");
+void hello(void) {
+  cprintf("hello!\n");
 }
-
