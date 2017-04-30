@@ -24,6 +24,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int hello(void);	// MOD - 4/11 : WEEK 2 EXERCISE
+int waitpid(int, int*, int);  	// MOD - 4/30 : LAB 1
 
 // ulib.c
 int stat(char*, struct stat*);

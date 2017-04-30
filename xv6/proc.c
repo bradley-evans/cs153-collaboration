@@ -280,6 +280,68 @@ wait(int * status)
   }
 }
 
+// This system call must act like wait system call with the
+// following additional properties:
+// The system call must wait for a process (not necessary a child process)
+// with a pid that equals to one provided by the pid argument. The return
+// value must be the process id of the process that was terminated or -1
+// if this process does not exist or if an unexpected error occurred. We
+// are required only to implement a nonblocking waitpid where the kernel
+// prevents the current process from execution until a process with the
+// given pid terminates.
+
+int
+waitpid(int pid, int * status, int options)
+{
+  struct proc *p;
+  int havekids;   // MOD - 4/29 : now using parameter pid
+
+  acquire(&ptable.lock);
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid != pid) {  // MOD - 4/29
+        continue;
+      }
+      
+      havekids = 1;
+      if(p->state == ZOMBIE){
+        // Found one.
+        
+        // MOD - 4/29
+        if (p->status != 0) {
+          *status = p->status;
+        } else *status = 0;
+        
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        freevm(p->pgdir);
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        p->state = UNUSED;
+        release(&ptable.lock);
+        return pid;
+      } else {
+        p->procswaiting++;
+        p->wpidlist[p->procswaiting] = proc;
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || proc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(proc, &ptable.lock);  //DOC: wait-sleep
+  }
+}
+
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.

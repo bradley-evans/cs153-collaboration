@@ -30,3 +30,4 @@ SYSCALL(sbrk)
 SYSCALL(sleep)
 SYSCALL(uptime)
 SYSCALL(hello)		// MOD - 4/11 : WEEK 2 EXERCISE
+SYSCALL(waitpid)	// MOD - 4/29 : WEEK 4 EXERCISE

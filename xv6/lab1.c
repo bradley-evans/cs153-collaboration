@@ -1,6 +1,10 @@
 #include "types.h"
 #include "user.h"
 
+int waitPid(void);
+int exitWait(void);
+int PScheduler(void);
+
 int main(int argc, char *argv[])
 {
 	int exitWait(void);
@@ -9,15 +13,16 @@ int main(int argc, char *argv[])
 
   printf(1, "\n This program tests the correctness of your lab#1\n");
   
-  if (atoi(argv[1]) == 1)
-	exitWait();
-  /*else if (atoi(argv[1]) == 2)
-	waitPid();
-  else if (atoi(argv[1]) == 3)
+  if (atoi(argv[1]) == 1) {
+	  exitWait();
+  } else if (atoi(argv[1]) == 2) {
+	  waitPid();
+  }
+  /*else if (atoi(argv[1]) == 3)
 	PScheduler();*/
-  else 
+  else {
    printf(1, "\ntype \"lab1 1\" to test exit and wait, \"lab1 2\" to test waitpid and \"lab1 3\" to test the priority scheduler \n");
-  
+  }
     // End of test
 	 exit(0);
  }
@@ -56,7 +61,7 @@ int main(int argc, char *argv[])
   return 0;
 } 
 
-/* int waitPid(void){
+int waitPid(void){
 	
   int ret_pid, exit_status;
   int i;
@@ -96,14 +101,15 @@ int main(int argc, char *argv[])
       printf(1, "\n This is the partent: Child# %d has exited with status %d\n",ret_pid, exit_status);
       
       return 0;
-  } */
+  }
       
       
-     /* int PScheduler(void){
+int PScheduler(void){
 		 
     // use this part to test the priority scheduler. Assuming that the priorities range between range between 0 to 63
     // 0 is the highest priority. All processes have a default priority of 20 
-
+  /*
+  
   int pid, ret_pid, exit_status;
   int i,j,k;
   
@@ -137,6 +143,9 @@ int main(int argc, char *argv[])
 			//printf(1,"\n This is the parent: child with PID# %d has finished with status %d \n",ret_pid,exit_status);
 			}
                      printf(1,"\n if processes with highest priority finished first then its correct \n");
+  }
+  
+	*/		
+	return 0;
+  
 }
-			
-	return 0;} */

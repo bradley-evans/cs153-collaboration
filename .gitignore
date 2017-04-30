@@ -185,3 +185,5 @@ TSWLatexianTemp*
 *.sublime-project
 *.sublime-workspace
 *.log
+.c9
+*.asm
