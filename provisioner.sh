@@ -13,20 +13,20 @@ apt-get install -y libsdl1.2-dev libtool-bin libglib2.0-dev libz-dev libpixman-1
 
 # Install QEMU
 mkdir /cs153
-cd ~/qemu
+cd ~/workspace/qemu
 ./configure --disable-kvm --target-list="i386-softmmu x86_64-softmmu"
 make
 make install
 
 # Stand up Xv6
-git clone https://github.com/mit-pdos/xv6-public.git ~/xv6
-cd ~/xv6
+#git clone https://github.com/mit-pdos/xv6-public.git ~/xv6
+cd ~/workspace/xv6
 # Change makefile to use 1 CPU on line 214 in xv6. I'm told this "makes things easier."
-sed 's/CPUS := 2/CPUS := 1/' Makefile > Makefile2
-mv Makefile Makefile.bkup
-mv Makefile2 Makefile
+#sed 's/CPUS := 2/CPUS := 1/' Makefile > Makefile2
+#mv Makefile Makefile.bkup
+#mv Makefile2 Makefile
 make
-echo "add-auto-load-safe-path $HOME/xv6/.gdbinit" > ~/.gdbinit
+echo "add-auto-load-safe-path $HOME/workspace/xv6/.gdbinit" > ~/.gdbinit
 
 # TODO: finish X11 breakfix
 # looks like most of this has to do with Cygwin peculiarities.
@@ -35,12 +35,12 @@ apt-get install -y xterm xinit
 
 # VANITY STUFF
 # Custom configurations for Vim.
-mkdir ~/.vim
-cp -r /os_share/vanity/* ~
-cp -r /os_share/vanity/.vim/* ~/.vim/
+#mkdir ~/.vim
+#cp -r /os_share/vanity/* ~
+#cp -r /os_share/vanity/.vim/* ~/.vim/
 
 # LAB 0.5 SAVE POINT
-cp -avf /os_share/lab0/* ~/xv6/
+#cp -avf /os_share/lab0/* ~/xv6/
 
 # LAB 1 SAVE POINT
-cp -r /os_share/lab1/xv6/* ~/xv6/
+#cp -r /os_share/lab1/xv6/* ~/xv6/
