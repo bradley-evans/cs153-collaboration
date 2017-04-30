@@ -117,6 +117,7 @@ int             wait(int*);
 void            wakeup(void*);
 void            yield(void);
 void		    hello(void);	// MOD - 4/11 : WEEK 2 EXERCISE
+void            waitpid(int, int*, int);    // MOD - 4/29
 
 // swtch.S
 void            swtch(struct context**, struct context*);
