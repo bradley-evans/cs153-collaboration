@@ -18,7 +18,7 @@ sys_exit(void)
 {
   int status;
 
-  if (!argint(0, &status) < 0) {
+  if (argint(0, &status) < 0) {
     return -1;
   } else exit(status);
   
@@ -26,13 +26,15 @@ sys_exit(void)
 }
 
 int
-sys_wait(int)
+sys_wait(void)    // MOD - 4/29
 {
-
-
-
-
-  return wait(0);
+  int * status;
+  
+  if (argptr(0, (char**)&status, sizeof(status)) < 0) {
+    return -1;
+  }
+  
+  return wait(status);
 }
 
 int

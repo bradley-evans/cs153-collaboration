@@ -182,7 +182,7 @@ fork(void)
 
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
-// until its parent calls wait(0) to find out it exited.
+// until its parent calls wait() to find out it exited.
 
 // MOD - 4/18 : Returns a status.
 
@@ -192,8 +192,7 @@ exit(int status)
   struct proc *p;
   int fd;
   
-  proc->status = status; // MOD - 4/18
-  cprintf("exit status %d", proc->status);
+  // cprintf("exit status %d", proc->status);
 
   if(proc == initproc)
     panic("init exiting");
@@ -213,7 +212,7 @@ exit(int status)
 
   acquire(&ptable.lock);
 
-  // Parent might be sleeping in wait(0).
+  // Parent might be sleeping in wait().
   wakeup1(proc->parent);
 
   // Pass abandoned children to init.
@@ -224,7 +223,8 @@ exit(int status)
         wakeup1(initproc);
     }
   }
-
+  
+  proc->status = status; // MOD - 4/18
   // Jump into the scheduler, never to return.
   proc->state = ZOMBIE;
   sched();
@@ -234,7 +234,7 @@ exit(int status)
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
-wait(int *status)
+wait(int * status)
 {
   struct proc *p;
   int havekids, pid;
@@ -249,6 +249,12 @@ wait(int *status)
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
+        
+        // MOD - 4/29
+        if (p->status != 0) {
+          *status = p->status;
+        } else *status = 0;
+        
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
