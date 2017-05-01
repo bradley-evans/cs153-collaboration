@@ -3,17 +3,13 @@ April 30th, 2017 <br/>
 Bradley Evans and Dharti Tarapara<br/>
 CS153 Operating Systems<br/>
 
-## Part 1: Hello World
+## Part 1: Adding System Calls
+
+### Hello World
 
 *Implementing a hello world function and executing it in the xv6 shell.*
 
-The `wait()` call is a straightforward function that force the process that calls it to halt operation until one of its children completes execution (until the child exits). The function is `int wait(int)` where the parameter is a pointer to an integer and the function returns the pid of the completed process.
-
-The behavior of wait depends on if the process invoking it has children. If there are children, the invoking process is blocked until a child process belonging to it exists. Otherwise, `wait()` does nothing at all.
-
-The purpose of this section is to familiarize ourselves with the implementation of a new system call. In our present case, we implement a simple *hello world* function that can be executed with the `hello` command from within the xv6 shell.
-
-To make this happen, we edit the following files in the following ways:
+The Hello World function is implemented by changing the following files.
 
 - `defs.h`
 	- A function prototype is added here.
@@ -53,80 +49,201 @@ To make this happen, we edit the following files in the following ways:
 
 Implemented in this way, the user can now execute a `hello` from the command line. This will trigger a system call, which will eventually call `hello()` from `proc.c`, displaying the hello world message.
 
-## Part 2: Tracing a Wait
+### Editing `wait()` and `exit()`
 
-For this portion, I will run `make qemu-nox-gdb` on one terminal window (Terminal A) and monitor `gdb` in another (Terminal B). Once A is waiting for `gdb`, I initiate the debugger in B and set `break wait` in order to set a breakpoint for the `wait()` system call.
+The `exit()` and `wait()` functions were modified to take integers.
 
-The breakpoint is triggered when I run `hello` in A:
+Each instance of `exit()` in user programs was changed to `exit(0)` to reflect the change in type of exit from `void` to `int`. `exit` (and, in the same way, `wait`) now return a status.
+
+To make use of this new parameter, `exit(int)` was changed to the following:
+```
+void
+exit(int status)
+{
+  struct proc *p;
+  int fd;
+  
+  // cprintf("exit status %d", proc->status);
+
+  if(proc == initproc)
+    panic("init exiting");
+
+  // Close all open files.
+  for(fd = 0; fd < NOFILE; fd++){
+    if(proc->ofile[fd]){
+      fileclose(proc->ofile[fd]);
+      proc->ofile[fd] = 0;
+    }
+  }
+
+  begin_op();
+  iput(proc->cwd);
+  end_op();
+  proc->cwd = 0;
+
+  acquire(&ptable.lock);
+
+  // Parent might be sleeping in wait().
+  wakeup1(proc->parent);
+
+  // Pass abandoned children to init.
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->parent == proc){
+      p->parent = initproc;
+      if(p->state == ZOMBIE)
+        wakeup1(initproc);
+    }
+  }
+  
+  proc->status = status; // MOD - 4/18
+  // Jump into the scheduler, never to return.
+  proc->state = ZOMBIE;
+  sched();
+  panic("zombie exit");
+}
+```
+Also, `wait()` was changed to the following:
+```
+int
+wait(int * status)
+{
+  struct proc *p;
+  int havekids, pid;
+
+  acquire(&ptable.lock);
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->parent != proc)
+        continue;
+      havekids = 1;
+      if(p->state == ZOMBIE){
+        // Found one.
+        
+        // MOD - 4/29
+        if (p->status != 0) {
+          *status = p->status;
+        } else *status = 0;
+        
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        freevm(p->pgdir);
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        p->state = UNUSED;
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || proc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(proc, &ptable.lock);  //DOC: wait-sleep
+  }
+}
+```
+
+## Part 2: Schedulers
+
+### Implementing Priority Scheduling
+
+Prior to this lab, xv6 used a *round robin* style scheduler. We modified it to use a *priority* scheduler, changing the scheduler code to the following.
 
 ```
-Breakpoint 1, wait () at proc.c:233
-233     {
-```
+void
+scheduler(void)
+{
+  struct proc *p;
+  int priority = 0;   // hold priority value
 
-Now I'll tell `gdb` to step through this wait call with `u`.
+  for(;;) {
+    // Enable interrupts on this processor.
+    sti();
 
-After the wait breakpoint, the program will then `acquire(&ptable.lock);` halting program execution while `wait()` looks for a child process to exit.
-```
-Breakpoint 1, wait () at proc.c:233
-233     {
-(gdb) u
-=> 0x80103e95 <wait+5>: sub    $0xc,%esp
-237       acquire(&ptable.lock);
-```
-Wait then tries to decide if the program has any children that need to run to completion.
-```
-=> 0x80103eab <wait+27>:        xor    %edx,%edx
-240         havekids = 0;
-```
-It starts looking for the next program that can run. Specifically, for children of the running process. Hello doesn't have children, so this will be easy. It'll just move right along and do nothing.
-```
-=> 0x80103ead <wait+29>:        mov    $0x80112dd4,%ebx
-241         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-```
-It makes sure the next process isn't a zombie.
-```
-=> 0x80103ec8 <wait+56>:        cmpl   $0x5,0xc(%ebx)
-245           if(p->state == ZOMBIE){
-```
-Then it proceeds. If the process doesn't have kids, it kills the process, goes to sleep.
-```
-=> 0x80103ece <wait+62>:        sub    $0xffffff80,%ebx
-241         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-(gdb) u
-=> 0x80103ed1 <wait+65>:        mov    $0x1,%edx
-244           havekids = 1;
-(gdb) u
-=> 0x80103ed6 <wait+70>:        cmp    $0x80114dd4,%ebx
-241         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-(gdb) u
-=> 0x80103ee0 <wait+80>:        test   %edx,%edx
-262         if(!havekids || proc->killed){
-(gdb) u
-=> 0x80103eeb <wait+91>:        sub    $0x8,%esp
-268         sleep(proc, &ptable.lock);  //DOC: wait-sleep
-```
-Wait releases the lock.
-```
-=> 0x80103eeb <wait+91>:        sub    $0x8,%esp
-268         sleep(proc, &ptable.lock);  //DOC: wait-sleep
-(gdb) u
-=> 0x80103ef9 <wait+105>:       add    $0x10,%esp
-269       }
-(gdb) u
-=> 0x80103efe <wait+110>:       sub    $0xc,%esp
-248             kfree(p->kstack);
-(gdb) u
-=> 0x80103f04 <wait+116>:       mov    0x10(%ebx),%esi
-247             pid = p->pid;
+    /* *** BEGIN MOD: 4/30 PRISCHED
+    for(priority = 0; priority < maxpriority; priority++) {
+      acquire(&ptable.lock);
+      // Loop over process table looking for process to run.
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->state != RUNNABLE)
+          continue;
+        // PRISCHED: Now check and see if that process matches our current
+        // priority level.
+        if (p->priority == priority) {
+          // If it does, get it running.
+          proc = p;
+          switchuvm(p);
+          p->state = RUNNING;
+          swtch(&cpu->scheduler, proc->context);
+          switchkvm();
+        }
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        proc = 0;
+      }
+      release(&ptable.lock);
+    }*/
 
+    // Loop over process table looking for process to run.
+    acquire(&ptable.lock);
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if(p->state != RUNNABLE) {
+        continue;
+      }
+      
+      release(&ptable.lock);
+      
+      priority = getprocpriority();
+      
+      acquire(&ptable.lock);
+      
+      if (priority < p->priority) {
+        p->priority = priority;
+      }
+      // Switch to chosen process.  It is the process's job
+      // to release ptable.lock and then reacquire it
+      // before jumping back to us.
+      proc = p;
+      switchuvm(p);
+      p->state = RUNNING;
+      swtch(&cpu->scheduler, p->context);
+      switchkvm();
 
-# snip #
-
-=> 0x80103f35 <wait+165>:       movl   $0x0,0xc(%ebx)
-255             p->state = UNUSED;
-(gdb) u
-=> 0x80103f3c <wait+172>:       movl   $0x80112da0,(%esp)
-256             release(&ptable.lock);
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      proc = 0;
+    }
+    release(&ptable.lock);
+  }
+}
 ```
-And we reach the end of the wait call and return to the shell.
+In addition, a `priority` variable was added to to `struct proc` to give variables a means of storing a priority code.
+
+The processes need a way to change priority. A mutator is required.  In `proc.c` this is defined as `setpriority`:
+```
+int
+setpriority(int num)
+{
+  if (num < 0) {
+    num = 0;
+  } else if (num > 63) {
+    num = 63;
+  }s priority
+  
+  proc->priority = num;
+  
+  return 0;
+}
+```
+This is tied to a `setpriority` system call, added into the system in a similar way to the earlier `hello` call.
+
+### 

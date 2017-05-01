@@ -425,20 +425,12 @@ scheduler(void)
       release(&ptable.lock);
       priority = getprocpriority();   // priority gets changed to
                                       // getprocpriority here
-      cprintf("\n(after getproc)CURRENT PRIORITY: ");
-      cprintf("%d",priority);
-      
       acquire(&ptable.lock);
       
-      cprintf("\n");
       
       if (priority < p->priority) {   // then compared to current proc's 
         p->priority = priority;       // priority level here, must be < only
         
-        cprintf("\n(if)CURRENT PRIORITY: ");
-        cprintf("%d",priority);
-        
-        cprintf("\n");
         
       }                          // and not <=
       // Switch to chosen process.  It is the process's job
