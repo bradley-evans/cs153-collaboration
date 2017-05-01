@@ -348,13 +348,12 @@ int
 getprocpriority(void)
 {
   struct proc *p;
-  // initialize to lowest priority (will go up as higher priority processes found)
-  int priority = 65000;
+  int priority = 65;
   
   // go through ptable
   acquire(&ptable.lock);
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-    // look for runnable processes
+    // look for runnable process
     if(p->state != RUNNABLE) {
           continue;
     }
@@ -362,8 +361,6 @@ getprocpriority(void)
     if(priority == 0) {
       priority = p->priority;
     } else {
-      // look for higher priority process and assign 'priority' with new highest
-      // priority
       if (p->priority < priority) {
         priority = p->priority;
       }
@@ -371,6 +368,7 @@ getprocpriority(void)
   }
   
   release(&ptable.lock);
+  
   return priority;
 }
 
@@ -394,8 +392,7 @@ scheduler(void)
     sti();
 
     /* *** BEGIN MOD: 4/30 PRISCHED
-    
-    for(priority = 0; priority < maxpriority; priority++) {
+    for(priority = 0; priority < 65; priority++) {
       acquire(&ptable.lock);
       // Loop over process table looking for process to run.
       for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -417,8 +414,6 @@ scheduler(void)
       }
       release(&ptable.lock);
     }*/
-    
-    // Old Round Robin Scheduler
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
@@ -428,15 +423,24 @@ scheduler(void)
       }
       
       release(&ptable.lock);
-      
-      // TODO: get priority value and set to 'priority'
-      priority = getprocpriority();
+      priority = getprocpriority();   // priority gets changed to
+                                      // getprocpriority here
+      cprintf("\n(after getproc)CURRENT PRIORITY: ");
+      cprintf("%d",priority);
       
       acquire(&ptable.lock);
       
-      if (priority < p->priority) {
-        p->priority = priority;
-      }
+      cprintf("\n");
+      
+      if (priority < p->priority) {   // then compared to current proc's 
+        p->priority = priority;       // priority level here, must be < only
+        
+        cprintf("\n(if)CURRENT PRIORITY: ");
+        cprintf("%d",priority);
+        
+        cprintf("\n");
+        
+      }                          // and not <=
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
