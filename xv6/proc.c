@@ -15,6 +15,7 @@ struct {
 static struct proc *initproc;
 
 int nextpid = 1;
+//int maxpriority = 63;         // MOD 4/30 : PRISCHED
 extern void forkret(void);
 extern void trapret(void);
 
@@ -49,6 +50,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+//  p->priority = 20;      // MOD 4/30 : PRISCHED - Set default priority to 20.
 
   release(&ptable.lock);
 
@@ -342,6 +344,36 @@ waitpid(int pid, int * status, int options)
   }
 }
 
+int
+getprocpriority(void)
+{
+  struct proc *p;
+  // initialize to lowest priority (will go up as higher priority processes found)
+  int priority = 65000;
+  
+  // go through ptable
+  acquire(&ptable.lock);
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    // look for runnable processes
+    if(p->state != RUNNABLE) {
+          continue;
+    }
+    
+    if(priority == 0) {
+      priority = p->priority;
+    } else {
+      // look for higher priority process and assign 'priority' with new highest
+      // priority
+      if (p->priority < priority) {
+        priority = p->priority;
+      }
+    }
+  }
+  
+  release(&ptable.lock);
+  return priority;
+}
+
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -350,21 +382,61 @@ waitpid(int pid, int * status, int options)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+
 void
 scheduler(void)
 {
   struct proc *p;
+  int priority = 0;   // hold priority value
 
-  for(;;){
+  for(;;) {
     // Enable interrupts on this processor.
     sti();
 
+    /* *** BEGIN MOD: 4/30 PRISCHED
+    
+    for(priority = 0; priority < maxpriority; priority++) {
+      acquire(&ptable.lock);
+      // Loop over process table looking for process to run.
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->state != RUNNABLE)
+          continue;
+        // PRISCHED: Now check and see if that process matches our current
+        // priority level.
+        if (p->priority == priority) {
+          // If it does, get it running.
+          proc = p;
+          switchuvm(p);
+          p->state = RUNNING;
+          swtch(&cpu->scheduler, proc->context);
+          switchkvm();
+        }
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        proc = 0;
+      }
+      release(&ptable.lock);
+    }*/
+    
+    // Old Round Robin Scheduler
+
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if(p->state != RUNNABLE) {
         continue;
-
+      }
+      
+      release(&ptable.lock);
+      
+      // TODO: get priority value and set to 'priority'
+      priority = getprocpriority();
+      
+      acquire(&ptable.lock);
+      
+      if (priority < p->priority) {
+        p->priority = priority;
+      }
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -379,8 +451,21 @@ scheduler(void)
       proc = 0;
     }
     release(&ptable.lock);
-
   }
+}
+
+int
+setpriority(int num)
+{
+  if (num < 0) {
+    num = 0;
+  } else if (num > 63) {
+    num = 63;
+  }
+  
+  proc->priority = num;
+  
+  return 0;
 }
 
 // Enter scheduler.  Must hold only ptable.lock
@@ -558,6 +643,7 @@ procdump(void)
   }
 }
 
-void hello(void) {
+void 
+hello(void) {
   cprintf("hello!\n");
 }

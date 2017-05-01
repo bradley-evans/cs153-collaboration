@@ -66,6 +66,7 @@ struct proc {
   int status;		               // MOD - 4/18 : Save exit status of process
   struct proc* wpidlist[50];   // MOD - 4/29 : List of processes that are waiting
   int procswaiting;            // MOD - 4/29 : Num processes that are waiting
+  int priority;                // MOD - 4/29 : PRISCHED
 };
 
 // Process memory is laid out contiguously, low addresses first:

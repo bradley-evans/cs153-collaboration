@@ -2547,10 +2547,11 @@ SYSCALL(waitpid)	// MOD - 4/29 : WEEK 4 EXERCISE
      eaa:	b8 17 00 00 00       	mov    $0x17,%eax
      eaf:	cd 40                	int    $0x40
      eb1:	c3                   	ret    
-     eb2:	66 90                	xchg   %ax,%ax
-     eb4:	66 90                	xchg   %ax,%ax
-     eb6:	66 90                	xchg   %ax,%ax
-     eb8:	66 90                	xchg   %ax,%ax
+
+00000eb2 <setpriority>:
+     eb2:	b8 18 00 00 00       	mov    $0x18,%eax
+     eb7:	cd 40                	int    $0x40
+     eb9:	c3                   	ret    
      eba:	66 90                	xchg   %ax,%ax
      ebc:	66 90                	xchg   %ax,%ax
      ebe:	66 90                	xchg   %ax,%ax

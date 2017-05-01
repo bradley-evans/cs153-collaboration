@@ -12,11 +12,11 @@
 00000000 .debug_loc
 00000000 .debug_ranges
 00000000 sh.c
-00001960 buf.1074
+00001960 buf.1076
 00000000 ulib.c
 00000000 printf.c
 00000ec0 printint
-000013b7 digits.1036
+000013b7 digits.1038
 00000000 umalloc.c
 000019c4 freep
 000019c8 base
@@ -27,6 +27,7 @@
 00000dd0 memmove
 00000e4a mknod
 00000380 execcmd
+00000eb2 setpriority
 00000cf0 gets
 00000e82 getpid
 000008b0 parsepipe

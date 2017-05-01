@@ -14,7 +14,7 @@
 00000000 ulib.c
 00000000 printf.c
 00000610 printint
-00000a55 digits.1036
+00000a55 digits.1038
 00000000 umalloc.c
 00000dc0 freep
 00000dc4 base
@@ -25,6 +25,7 @@
 00000520 memmove
 00000140 matchhere
 0000059a mknod
+00000602 setpriority
 00000440 gets
 000005d2 getpid
 000005f2 hello
