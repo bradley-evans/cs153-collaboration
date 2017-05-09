@@ -50,7 +50,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-//  p->priority = 20;      // MOD 4/30 : PRISCHED - Set default priority to 20.
+  p->priority = 20;      // MOD 4/30 : PRISCHED - Set default priority to 20.
 
   release(&ptable.lock);
 
@@ -429,10 +429,9 @@ scheduler(void)
       
       
       if (priority < p->priority) {   // then compared to current proc's 
-        p->priority = priority;       // priority level here, must be < only
-        
-        
-      }                          // and not <=
+        p->priority = priority;       // priority level here
+      }                         
+      
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
