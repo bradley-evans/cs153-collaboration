@@ -15,7 +15,6 @@ struct {
 static struct proc *initproc;
 
 int nextpid = 1;
-//int maxpriority = 63;         // MOD 4/30 : PRISCHED
 extern void forkret(void);
 extern void trapret(void);
 
@@ -50,7 +49,6 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  p->priority = 20;      // MOD 4/30 : PRISCHED - Set default priority to 20.
 
   release(&ptable.lock);
 
@@ -185,16 +183,11 @@ fork(void)
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.
-
-// MOD - 4/18 : Returns a status.
-
 void
-exit(int status)
+exit(void)
 {
   struct proc *p;
   int fd;
-  
-  // cprintf("exit status %d", proc->status);
 
   if(proc == initproc)
     panic("init exiting");
@@ -225,8 +218,7 @@ exit(int status)
         wakeup1(initproc);
     }
   }
-  
-  proc->status = status; // MOD - 4/18
+
   // Jump into the scheduler, never to return.
   proc->state = ZOMBIE;
   sched();
@@ -236,7 +228,7 @@ exit(int status)
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
-wait(int * status)
+wait(void)
 {
   struct proc *p;
   int havekids, pid;
@@ -251,12 +243,6 @@ wait(int * status)
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
-        
-        // MOD - 4/29
-        if (p->status != 0) {
-          *status = p->status;
-        } else *status = 0;
-        
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -280,96 +266,6 @@ wait(int * status)
     // Wait for children to exit.  (See wakeup1 call in proc_exit.)
     sleep(proc, &ptable.lock);  //DOC: wait-sleep
   }
-}
-
-// This system call must act like wait system call with the
-// following additional properties:
-// The system call must wait for a process (not necessary a child process)
-// with a pid that equals to one provided by the pid argument. The return
-// value must be the process id of the process that was terminated or -1
-// if this process does not exist or if an unexpected error occurred. We
-// are required only to implement a nonblocking waitpid where the kernel
-// prevents the current process from execution until a process with the
-// given pid terminates.
-
-int
-waitpid(int pid, int * status, int options)
-{
-  struct proc *p;
-  int havekids;   // MOD - 4/29 : now using parameter pid
-
-  acquire(&ptable.lock);
-  for(;;){
-    // Scan through table looking for exited children.
-    havekids = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->pid != pid) {  // MOD - 4/29
-        continue;
-      }
-      
-      havekids = 1;
-      if(p->state == ZOMBIE){
-        // Found one.
-        
-        // MOD - 4/29
-        if (p->status != 0) {
-          *status = p->status;
-        } else *status = 0;
-        
-        pid = p->pid;
-        kfree(p->kstack);
-        p->kstack = 0;
-        freevm(p->pgdir);
-        p->pid = 0;
-        p->parent = 0;
-        p->name[0] = 0;
-        p->killed = 0;
-        p->state = UNUSED;
-        release(&ptable.lock);
-        return pid;
-      } else {
-        p->procswaiting++;
-        p->wpidlist[p->procswaiting] = proc;
-      }
-    }
-
-    // No point waiting if we don't have any children.
-    if(!havekids || proc->killed){
-      release(&ptable.lock);
-      return -1;
-    }
-
-    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
-    sleep(proc, &ptable.lock);  //DOC: wait-sleep
-  }
-}
-
-int
-getprocpriority(void)
-{
-  struct proc *p;
-  int priority = 65;
-  
-  // go through ptable
-  acquire(&ptable.lock);
-  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-    // look for runnable process
-    if(p->state != RUNNABLE) {
-          continue;
-    }
-    
-    if(priority == 0) {
-      priority = p->priority;
-    } else {
-      if (p->priority < priority) {
-        priority = p->priority;
-      }
-    }
-  }
-  
-  release(&ptable.lock);
-  
-  return priority;
 }
 
 //PAGEBREAK: 42
@@ -380,58 +276,21 @@ getprocpriority(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
-
 void
 scheduler(void)
 {
   struct proc *p;
-  int priority = 0;   // hold priority value
 
-  for(;;) {
+  for(;;){
     // Enable interrupts on this processor.
     sti();
 
-    /* *** BEGIN MOD: 4/30 PRISCHED
-    for(priority = 0; priority < 65; priority++) {
-      acquire(&ptable.lock);
-      // Loop over process table looking for process to run.
-      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        if(p->state != RUNNABLE)
-          continue;
-        // PRISCHED: Now check and see if that process matches our current
-        // priority level.
-        if (p->priority == priority) {
-          // If it does, get it running.
-          proc = p;
-          switchuvm(p);
-          p->state = RUNNING;
-          swtch(&cpu->scheduler, proc->context);
-          switchkvm();
-        }
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        proc = 0;
-      }
-      release(&ptable.lock);
-    }*/
-
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-      if(p->state != RUNNABLE) {
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state != RUNNABLE)
         continue;
-      }
-      
-      release(&ptable.lock);
-      priority = getprocpriority();   // priority gets changed to
-                                      // getprocpriority here
-      acquire(&ptable.lock);
-      
-      
-      if (priority < p->priority) {   // then compared to current proc's 
-        p->priority = priority;       // priority level here
-      }                         
-      
+
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -446,21 +305,8 @@ scheduler(void)
       proc = 0;
     }
     release(&ptable.lock);
-  }
-}
 
-int
-setpriority(int num)
-{
-  if (num < 0) {
-    num = 0;
-  } else if (num > 63) {
-    num = 63;
   }
-  
-  proc->priority = num;
-  
-  return 0;
 }
 
 // Enter scheduler.  Must hold only ptable.lock
@@ -610,7 +456,7 @@ procdump(void)
 {
   static char *states[] = {
   [UNUSED]    "unused",
-   [EMBRYO]    "embryo",
+  [EMBRYO]    "embryo",
   [SLEEPING]  "sleep ",
   [RUNNABLE]  "runble",
   [RUNNING]   "run   ",
@@ -636,9 +482,4 @@ procdump(void)
     }
     cprintf("\n");
   }
-}
-
-void 
-hello(void) {
-  cprintf("hello!\n");
 }
