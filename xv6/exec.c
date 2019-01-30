@@ -38,6 +38,17 @@ exec(char *path, char **argv)
 
   // Load program into memory.
   sz = 0;
+  
+  
+	// Allocate a page of memory for NULL
+	// If we attempt to access this memory
+	// (null pointer dereference) then return
+	// an error
+	if((sz = allocuvm(pgdir, sz, PGSIZE)) == 0)     // MOD : Lab 2
+	  goto bad; 
+	 
+	clearpteu(pgdir, (char*)(sz - PGSIZE));          // MOD : Lab 2
+  
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
     if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))
       goto bad;

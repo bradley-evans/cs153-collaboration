@@ -23,6 +23,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int v2p(int, int*);	// MOD: Lab 2 v2p prototype
 
 // ulib.c
 int stat(char*, struct stat*);

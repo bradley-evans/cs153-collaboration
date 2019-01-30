@@ -483,3 +483,27 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+void        // MOD: Lab 2 
+v2p(int virtual, int* physical) 
+{
+  unsigned short int dir = virtual>>22;
+  unsigned short int table = (virtual>>12)&0x3ff;
+  unsigned short int offset = virtual & 0xfff;
+  
+  pde_t *pde;
+  pte_t *pgtab;
+  
+  // Find the page directory entry.
+  pde = &proc->pgdir[PDX(virtual)];
+  // Use the page directory entry to find the page table entry.
+  pgtab = (pte_t*)V2P(PTE_ADDR(*pde));
+  
+  cprintf("Virtual Address: dir:0x%x table:0x%x offset:0x%x \n",dir,table,offset);
+  cprintf("Page Table Address: 0x%x \n",*pgtab);
+  
+  *physical = (PTE_ADDR(pgtab[PTX(virtual)])) | (virtual & 0xFFF);
+  cprintf("Physical Address: 0x%x \n",*physical);
+
+  
+}

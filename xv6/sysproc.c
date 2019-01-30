@@ -89,3 +89,20 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int sys_v2p(void) {     // MOD: Lab 2
+  int virtual=0;
+  int *physical;
+  
+  if (argint(0, &virtual) < 0) {
+    return -1;
+  }
+
+  if (argptr(1, (char**)&physical, sizeof(physical)) < 0) {
+    return -1;
+  }
+  
+  v2p(virtual,physical);
+  return virtual;
+
+}
